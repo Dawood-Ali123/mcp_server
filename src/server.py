@@ -15,8 +15,9 @@ async def test_database()->str:
             await cursor.execute("SELECT 1")
             result=await cursor.fetchone()
         return f"Database connection seccuseeful :{result}"
-    except Exception:
-        return "Unable to connect the database right now"
+    except Exception as e:
+        return RuntimeError (f"Unable to fetch database :{e}")
+
     finally:
         if conn:
             conn.close()
@@ -43,8 +44,8 @@ ORDER by id;
                     "price":row[3]
                 })
             return products
-    except Exception:
-        return {"error":"Unable to fetch products right now"}
+    except Exception as e:
+        raise RuntimeError(f"Unablee to fetch products :{e}")
     finally:
         if conn:
             await conn.close()
@@ -72,8 +73,9 @@ order by id;
                 })
 
             return users
-    except Exception:
-        return {"error":"unable to fetch the customers right now"}
+    except Exception as e:
+        return (f"Unable to fetch users {e}")
+ 
     finally:
         if conn:
             await conn.close()
@@ -86,7 +88,7 @@ async def get_orders()->list:
         conn=await get_connection()
         async with conn.cursor() as cursor:
             await cursor.execute("""
-SELECT orders.id,users.name,orders,order_date 
+SELECT orders.id,users.name,orders.order_date 
 from orders 
 JOIN users
 on orders.user_id=users.id
@@ -102,8 +104,8 @@ ORDER BY orders.id
 
                 })
             return orders
-    except Exception:
-        return {"error":"Unable to fetch orders right now"}
+    except Exception as e:
+        return RuntimeError(f"Unable to fetch orders :{e}")
     finally:
         if conn:
             await conn.close()
@@ -142,8 +144,8 @@ ORDER BY orders.id;
                 "price":float(row[4])
             })
             return products
-    except Exception:
-        return {"error":"Unable to the fetch the details right now"}
+    except Exception as e:
+        return (f"Unable to the fetch the order details:{e}")
     finally:
         if conn:
             await conn.close()
@@ -176,8 +178,9 @@ ORDER BY total_revenue DESC;
                     "Total _revenue":float(row[3])
                 })
             return revenue
-    except Exception:
-        return {'error':"Unable to fetch sales summary right now"}
+    except Exception as e:
+        return (f"Unable to get the customer history{e}")
+        
     finally:
         if conn:
             await conn.close()
@@ -214,9 +217,10 @@ ORDER BY total_spent DESC
                     "total_orders":row[2],
                     "total_spent":float(row[3])
                 })
-                return customer
-    except Exception:
-        return {"error":"unavle to fetch the customer details right now"}
+            return customer
+    except Exception as e:
+        return (f"Unbale to get the top customers :{e}")
+
     finally:
         if conn:
             await conn.close()
@@ -248,8 +252,9 @@ ORDER BY orders.id;
                     "order_date":str(row[2])
                 })
             return person
-    except Exception:
-        return {"error":"Unable to return the details of cutomer now"}
+    except Exception as e:
+        return(f"uable to get the customers orders {e}")
+       
     finally:
         if conn:
            await conn.close()
@@ -285,8 +290,9 @@ async def search_products(search_term: str) -> list[dict]:
                 }
                 for row in rows
             ]
-    except Exception:
-        return {"error":"Return the products right now"}
+    except Exception as e:
+        return (f"Unable to get the serach products {e}")
+        
     finally:
         if conn:
              await conn.close()
@@ -337,10 +343,8 @@ async def get_customer_summary(user_id: int) -> dict:
                 "total_items": row[3],
                 "total_spent": float(row[4])
             }
-    except Exception:
-        return {
-            "error":"Unable to fetch customer summary rright now"
-        }
+    except Exception as e:
+        return (f"Uable to get the customer summary {e}")
     finally:
         if conn:
             await conn.close()
@@ -386,10 +390,9 @@ async def get_order_total(order_id: int) -> dict:
                 "customer": row[1],
                 "total": float(row[2])
             }
-    except Exception:
-        return {
-            "Error":"Unable to calculate order total right now"
-        }
+    except Exception as e:
+        return (f"Unable to get the total order {e}")
+ 
 
     finally:
         if conn:
@@ -441,8 +444,9 @@ async def run_read_query(query: str) -> list[dict]:
                 dict(zip(columns, row))
                 for row in rows
             ]
-    except Exception:
-        return {"error":"unbale to execute the query right now"}
+    except Exception as e:
+        return RuntimeError (f"Unable to fetch customer :{e}")
+       
     finally:
         if conn:
             await conn.close()
@@ -464,7 +468,7 @@ async def get_customer_resource(customer_id: int):
     async with conn.cursor() as cur:
             await cur.execute("""
                 SELECT id, name, email
-                FROM customers
+                FROM users
                 WHERE id = %s
             """, (customer_id,))
 
