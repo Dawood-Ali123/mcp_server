@@ -6,14 +6,14 @@ def hello() -> str:
     """Test whether the MCP server is working."""
     return "MCP server is working!"
 @mcp.tool()
-def test_database()->str:
+async def test_database()->str:
     """Test connection with postgresql databasr"""
     conn=None
     try:
-        conn=get_connection()
-        with conn.cursor() as cursor:
-            cursor.execute("SELECT 1")
-            result=cursor.fetchone()
+        conn=await get_connection()
+        async with conn.cursor() as cursor:
+            await cursor.execute("SELECT 1")
+            result=await cursor.fetchone()
         return f"Database connection seccuseeful :{result}"
     except Exception:
         return "Unable to connect the database right now"
@@ -21,19 +21,19 @@ def test_database()->str:
         if conn:
             conn.close()
 @mcp.tool()
-def get_products()->list:
+async def get_products()->list:
     """Get allthe products from the ecommerece database"""
     conn=None
     try:
-        con=get_connection()
-        with conn.cursor() as cursor:
-            cursor.execute("""
+        con=await get_connection()
+        async with conn.cursor() as cursor:
+            await cursor.execute("""
 SELECT id,name,category,price 
 FROM products 
 ORDER by id;
 
 """)
-            rows=cursor.fetchall()
+            rows=await cursor.fetchall()
             products=[]
             for row in rows:
                 products.append({
@@ -47,21 +47,21 @@ ORDER by id;
         return {"error":"Unable to fetch products right now"}
     finally:
         if conn:
-            conn.close()
+            await conn.close()
 
 @mcp.tool()
-def get_users()->list:
+async def get_users()->list:
     """Get all the users from the ecommerece database"""
     conn=None
     try:
-        conn=get_connection()
-        with conn.cursor() as cursor:
-            cursor.execute("""
+        conn=await get_connection()
+        async with conn.cursor() as cursor:
+            await cursor.execute("""
 SELECT id,name,email,signup_date
 FROM users
 order by id;
 """)
-            rows=cursor.fetchall()
+            rows=await cursor.fetchall()
             users=[]
             for row in rows:
                 users.append({
@@ -76,23 +76,23 @@ order by id;
         return {"error":"unable to fetch the customers right now"}
     finally:
         if conn:
-            conn.close()
+            await conn.close()
 
 @mcp.tool()
-def get_orders()->list:
+async def get_orders()->list:
     """Get all the orders with the user name"""
     conn=None
     try:
-        conn=get_connection()
-        with conn.cursor() as cursor:
-            cursor.execute("""
+        conn=await get_connection()
+        async with conn.cursor() as cursor:
+            await cursor.execute("""
 SELECT orders.id,users.name,orders,order_date 
 from orders 
 JOIN users
 on orders.user_id=users.id
 ORDER BY orders.id
 """)
-            rows=cursor.fetchall()
+            rows=await cursor.fetchall()
             orders=[]
             for row in rows:
                 orders.append({
@@ -106,15 +106,15 @@ ORDER BY orders.id
         return {"error":"Unable to fetch orders right now"}
     finally:
         if conn:
-            conn.close()
+            await conn.close()
 @mcp.tool()
-def get_order_details()->list:
+async def get_order_details()->list:
     """Get detailed information about all orders"""
     conn=None
     try:
-        conn=get_connection()
-        with conn.cursor() as cursor:
-            cursor.execute("""
+        conn=await get_connection()
+        async with conn.cursor() as cursor:
+            await cursor.execute("""
 SELECT 
 orders.id AS order_id,
 users.name AS user_name,
@@ -131,7 +131,7 @@ JOIN products
 ORDER BY orders.id;
 
 """)
-            rows=cursor.fetchall()
+            rows=await cursor.fetchall()
             products=[]
             for row in rows:
                 products.append({
@@ -146,15 +146,15 @@ ORDER BY orders.id;
         return {"error":"Unable to the fetch the details right now"}
     finally:
         if conn:
-            conn.close()
+            await conn.close()
 @mcp.tool()
-def get_sales_summary()->list:
+async def get_sales_summary()->list:
     """Get the total quantity sold and revenue fro each products"""
     conn=None
     try:
-        conn=get_connection()
-        with conn.cursor() as cursor:
-            cursor.execute("""
+        conn=await get_connection()
+        async with conn.cursor() as cursor:
+            await cursor.execute("""
 SELECT 
 products.id,
 products.name,
@@ -166,7 +166,7 @@ ON order_items.product_id=products.id
 GROUP BY products.id,products.name
 ORDER BY total_revenue DESC;
 """)
-            rows=cursor.fetchall()
+            rows=await cursor.fetchall()
             revenue=[]
             for row in rows:
                 revenue.append({
@@ -180,15 +180,15 @@ ORDER BY total_revenue DESC;
         return {'error':"Unable to fetch sales summary right now"}
     finally:
         if conn:
-            conn.close()
+            await conn.close()
 @mcp.tool()
-def get_top_customers()->list[dict]:
+async def get_top_customers()->list[dict]:
     """Get customers ranked by total spending"""
     conn=None
     try:
-        conn=get_connection()
-        with conn.cursor() as cursor:
-            cursor.execute("""
+        conn=await get_connection()
+        async with conn.cursor() as cursor:
+            await cursor.execute("""
 SELECT 
 users.id,
 users.name,
@@ -205,7 +205,7 @@ GROUP BY users.id,users.name
 ORDER BY total_spent DESC
 
 """)
-            rows=cursor.fetchall()
+            rows=await cursor.fetchall()
             customer=[]
             for row in rows:
                 customer.append({
@@ -219,16 +219,16 @@ ORDER BY total_spent DESC
         return {"error":"unavle to fetch the customer details right now"}
     finally:
         if conn:
-            conn.close()
+            await conn.close()
 
 @mcp.tool()
-def get_customer_orders(user_id:int)->list:
+async def get_customer_orders(user_id:int)->list:
     """Get all orders placed by this customers"""
     conn=None
     try:
-        conn=get_connection()
-        with conn.cursor() as cur:
-            cur.execute("""
+        conn=await get_connection()
+        async with conn.cursor() as cur:
+            await cur.execute("""
 SELECT 
 orders.id as order_id,
 users.name as user_name,
@@ -239,7 +239,7 @@ ON orders.user_id=users.id
 WHere users.id=%s
 ORDER BY orders.id;
 """,(user_id,))
-            rows=cur.fetchall()
+            rows=await cur.fetchall()
             person=[]
             for row in rows:
                 person.append({
@@ -252,17 +252,17 @@ ORDER BY orders.id;
         return {"error":"Unable to return the details of cutomer now"}
     finally:
         if conn:
-           conn.close()
+           await conn.close()
 @mcp.tool()
-def search_products(search_term: str) -> list[dict]:
+async def search_products(search_term: str) -> list[dict]:
     """Search products by name or category."""
 
     conn = None
 
     try:
-        conn=get_connection()
-        with conn.cursor() as cur:
-            cur.execute("""
+        await conn=get_connection()
+        async with conn.cursor() as cur:
+            await cur.execute("""
                 SELECT
                     id,
                     name,
@@ -274,7 +274,7 @@ def search_products(search_term: str) -> list[dict]:
                 ORDER BY id;
             """, (f"%{search_term}%", f"%{search_term}%"))
 
-            rows = cur.fetchall()
+            rows = await cur.fetchall()
 
             return [
                 {
@@ -289,9 +289,9 @@ def search_products(search_term: str) -> list[dict]:
         return {"error":"Return the products right now"}
     finally:
         if conn:
-             conn.close()
+             await conn.close()
 @mcp.tool()
-def get_customer_summary(user_id: int) -> dict:
+async def get_customer_summary(user_id: int) -> dict:
     """Get a summary of a customer's orders and total spending."""
     if user_id<=0:
         return {
@@ -300,9 +300,9 @@ def get_customer_summary(user_id: int) -> dict:
     conn = None
 
     try:
-        conn=get_connection()
-        with conn.cursor() as cur:
-            cur.execute("""
+        conn=await get_connection()
+        async with conn.cursor() as cur:
+            await cur.execute("""
                 SELECT
                     users.id,
                     users.name,
@@ -343,9 +343,9 @@ def get_customer_summary(user_id: int) -> dict:
         }
     finally:
         if conn:
-            conn.close()
+            await conn.close()
 @mcp.tool()
-def get_order_total(order_id: int) -> dict:
+async def get_order_total(order_id: int) -> dict:
     """Get the total amount of a specific order."""
     if order_id<=0:
         return {"error":"Order ID must be greater than 0"}
@@ -353,9 +353,9 @@ def get_order_total(order_id: int) -> dict:
     conn = None
 
     try:
-        conn=get_connection()
-        with conn.cursor() as cur:
-            cur.execute("""
+        conn=await get_connection()
+        async with conn.cursor() as cur:
+            await cur.execute("""
                 SELECT
                     orders.id,
                     users.name,
@@ -374,7 +374,7 @@ def get_order_total(order_id: int) -> dict:
                 GROUP BY orders.id, users.name;
             """, (order_id,))
 
-            row = cur.fetchone()
+            row = await cur.fetchone()
 
             if row is None:
                 return {
@@ -393,9 +393,9 @@ def get_order_total(order_id: int) -> dict:
 
     finally:
         if conn:
-            conn.close()
+            await conn.close()
 @mcp.tool()
-def run_read_query(query: str) -> list[dict]:
+async def run_read_query(query: str) -> list[dict]:
     """Execute a read-only SQL query."""
 
     query = query.strip()
@@ -429,11 +429,11 @@ def run_read_query(query: str) -> list[dict]:
     conn = None
 
     try:
-        conn=get_connection()
-        with conn.cursor() as cur:
-            cur.execute(query)
+        conn=await get_connection()
+        async with conn.cursor() as cur:
+            await cur.execute(query)
 
-            rows = cur.fetchall()
+            rows = await cur.fetchall()
 
             columns = [desc.name for desc in cur.description]
 
@@ -445,42 +445,30 @@ def run_read_query(query: str) -> list[dict]:
         return {"error":"unbale to execute the query right now"}
     finally:
         if conn:
-            conn.close()
-@mcp.resource("Products://")
-def all_products_resource():
-    with get_connection as conn:
-        with conn.cursor() as cursor:
-            cursor.execute("""
+            await conn.close()
+@mcp.resource("Products://{product_id}")
+async def all_products_resource():
+    conn=await get_connection()
+    async with conn.cursor() as cursor:
+            await cursor.execute("""
 SELECT id,name,price
 FROM products
 ORDER BY id
 """)
-            products=cursor.fetchall()
+            products=await cursor.fetchall()
             return str(products)
-@mcp.resource("Products://{product_id}")
-def get_product_resource(product_id:int):
-    with get_connection() as conn:
-        with conn.cursor() as cursor:
-            cursor.execute("""
-SELECT id,name,price 
-FROM products
-where id=%s
-""",(product_id,))
-            product=cursor.fetchone()
-            if product is None:
-                return "Product is not found"
-            return str(product)
+
 @mcp.resource("customers://{customer_id}")
-def get_customer_resource(customer_id: int):
-    with get_connection() as conn:
-        with conn.cursor() as cur:
-            cur.execute("""
+async def get_customer_resource(customer_id: int):
+    conn=get_connection()
+    async with conn.cursor() as cur:
+            await cur.execute("""
                 SELECT id, name, email
                 FROM customers
                 WHERE id = %s
             """, (customer_id,))
 
-            customer = cur.fetchone()
+            customer = await cur.fetchone()
 
             if customer is None:
                 return "Customer not found"
