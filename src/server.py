@@ -19,6 +19,7 @@ async def test_database()->str:
         conn=await get_connection()
         async with conn.cursor() as cursor:
             await cursor.execute("SELECT 1")
+            return "DATA BASE CONNECTION WAS SUCCESFUL"
     except Exception as e:
         raise RuntimeError (f"Unable to fetch database :{e}")
 
@@ -501,6 +502,6 @@ Use only the provided customer/order data.
 if __name__ == "__main__":
     mcp.run(
         transport="streamable-http",
-        host="0.0.0.0",
+        host="127.0.0.1",
         port=8000
     )
