@@ -447,7 +447,7 @@ async def run_read_query(query: str) -> list[dict]:
         if conn:
             await conn.close()
 @mcp.resource("Products://{product_id}")
-async def all_products_resource():
+async def all_products_resource(product_id:int):
     conn=await get_connection()
     async with conn.cursor() as cursor:
             await cursor.execute("""
@@ -491,7 +491,7 @@ Use only the provided customer/order data.
 
 if __name__ == "__main__":
     mcp.run(
-        transport="https://ecommerce-database-mcp.fastmcp.app/mcp",
+        transport="streamable-http",
         host="0.0.0.0",
         port=8000
     )
