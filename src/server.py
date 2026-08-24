@@ -8,19 +8,24 @@ def hello() -> str:
 @mcp.tool()
 def test_database()->str:
     """Test connection with postgresql databasr"""
-    conn=get_connection()
+    conn=None
     try:
+        conn=get_connection()
         with conn.cursor() as cursor:
             cursor.execute("SELECT 1")
             result=cursor.fetchone()
         return f"Database connection seccuseeful :{result}"
+    except Exception:
+        return "Unable to connect the database right now"
     finally:
-        conn.close()
+        if conn:
+            conn.close()
 @mcp.tool()
 def get_products()->list:
     """Get allthe products from the ecommerece database"""
-    conn=get_connection()
+    conn=None
     try:
+        con=get_connection()
         with conn.cursor() as cursor:
             cursor.execute("""
 SELECT id,name,category,price 
@@ -38,15 +43,18 @@ ORDER by id;
                     "price":row[3]
                 })
             return products
-
+    except Exception:
+        return {"error":"Unable to fetch products right now"}
     finally:
-        conn.close()
+        if conn:
+            conn.close()
 
 @mcp.tool()
 def get_users()->list:
     """Get all the users from the ecommerece database"""
-    conn=get_connection()
+    conn=None
     try:
+        conn=get_connection()
         with conn.cursor() as cursor:
             cursor.execute("""
 SELECT id,name,email,signup_date
@@ -64,14 +72,18 @@ order by id;
                 })
 
             return users
+    except Exception:
+        return {"error":"unable to fetch the customers right now"}
     finally:
-        conn.close()
+        if conn:
+            conn.close()
 
 @mcp.tool()
 def get_orders()->list:
     """Get all the orders with the user name"""
-    conn=get_connection()
+    conn=None
     try:
+        conn=get_connection()
         with conn.cursor() as cursor:
             cursor.execute("""
 SELECT orders.id,users.name,orders,order_date 
@@ -90,13 +102,17 @@ ORDER BY orders.id
 
                 })
             return orders
+    except Exception:
+        return {"error":"Unable to fetch orders right now"}
     finally:
-        conn.close()
+        if conn:
+            conn.close()
 @mcp.tool()
 def get_order_details()->list:
     """Get detailed information about all orders"""
-    conn=get_connection()
+    conn=None
     try:
+        conn=get_connection()
         with conn.cursor() as cursor:
             cursor.execute("""
 SELECT 
@@ -126,13 +142,17 @@ ORDER BY orders.id;
                 "price":float(row[4])
             })
             return products
+    except Exception:
+        return {"error":"Unable to the fetch the details right now"}
     finally:
-        conn.close()
+        if conn:
+            conn.close()
 @mcp.tool()
 def get_sales_summary()->list:
     """Get the total quantity sold and revenue fro each products"""
-    conn=get_connection()
+    conn=None
     try:
+        conn=get_connection()
         with conn.cursor() as cursor:
             cursor.execute("""
 SELECT 
@@ -156,13 +176,17 @@ ORDER BY total_revenue DESC;
                     "Total _revenue":float(row[3])
                 })
             return revenue
+    except Exception:
+        return {'error':"Unable to fetch sales summary right now"}
     finally:
-        conn.close()
+        if conn:
+            conn.close()
 @mcp.tool()
 def get_top_customers()->list[dict]:
     """Get customers ranked by total spending"""
-    conn=get_connection()
+    conn=None
     try:
+        conn=get_connection()
         with conn.cursor() as cursor:
             cursor.execute("""
 SELECT 
@@ -191,14 +215,18 @@ ORDER BY total_spent DESC
                     "total_spent":float(row[3])
                 })
                 return customer
+    except Exception:
+        return {"error":"unavle to fetch the customer details right now"}
     finally:
-        conn.close()
+        if conn:
+            conn.close()
 
 @mcp.tool()
 def get_customer_orders(user_id:int)->list:
     """Get all orders placed by this customers"""
-    conn=get_connection()
+    conn=None
     try:
+        conn=get_connection()
         with conn.cursor() as cur:
             cur.execute("""
 SELECT 
@@ -220,15 +248,19 @@ ORDER BY orders.id;
                     "order_date":str(row[2])
                 })
             return person
+    except Exception:
+        return {"error":"Unable to return the details of cutomer now"}
     finally:
-        conn.close()
+        if conn:
+           conn.close()
 @mcp.tool()
 def search_products(search_term: str) -> list[dict]:
     """Search products by name or category."""
 
-    conn = get_connection()
+    conn = None
 
     try:
+        conn=get_connection()
         with conn.cursor() as cur:
             cur.execute("""
                 SELECT
@@ -253,16 +285,22 @@ def search_products(search_term: str) -> list[dict]:
                 }
                 for row in rows
             ]
-
+    except Exception:
+        return {"error":"Return the products right now"}
     finally:
-        conn.close()
+        if conn:
+             conn.close()
 @mcp.tool()
 def get_customer_summary(user_id: int) -> dict:
     """Get a summary of a customer's orders and total spending."""
-
-    conn = get_connection()
+    if user_id<=0:
+        return {
+            "error":"User ID must be greater than 0"
+        }
+    conn = None
 
     try:
+        conn=get_connection()
         with conn.cursor() as cur:
             cur.execute("""
                 SELECT
@@ -299,16 +337,23 @@ def get_customer_summary(user_id: int) -> dict:
                 "total_items": row[3],
                 "total_spent": float(row[4])
             }
-
+    except Exception:
+        return {
+            "error":"Unable to fetch customer summary rright now"
+        }
     finally:
-        conn.close()
+        if conn:
+            conn.close()
 @mcp.tool()
 def get_order_total(order_id: int) -> dict:
     """Get the total amount of a specific order."""
-
-    conn = get_connection()
+    if order_id<=0:
+        return {"error":"Order ID must be greater than 0"}
+    
+    conn = None
 
     try:
+        conn=get_connection()
         with conn.cursor() as cur:
             cur.execute("""
                 SELECT
@@ -341,9 +386,14 @@ def get_order_total(order_id: int) -> dict:
                 "customer": row[1],
                 "total": float(row[2])
             }
+    except Exception:
+        return {
+            "Error":"Unable to calculate order total right now"
+        }
 
     finally:
-        conn.close()
+        if conn:
+            conn.close()
 @mcp.tool()
 def run_read_query(query: str) -> list[dict]:
     """Execute a read-only SQL query."""
@@ -376,9 +426,10 @@ def run_read_query(query: str) -> list[dict]:
                 f"Forbidden SQL operation: {keyword}"
             )
 
-    conn = get_connection()
+    conn = None
 
     try:
+        conn=get_connection()
         with conn.cursor() as cur:
             cur.execute(query)
 
@@ -390,9 +441,11 @@ def run_read_query(query: str) -> list[dict]:
                 dict(zip(columns, row))
                 for row in rows
             ]
-
+    except Exception:
+        return {"error":"unbale to execute the query right now"}
     finally:
-        conn.close()
+        if conn:
+            conn.close()
 @mcp.resource("Products://")
 def all_products_resource():
     with get_connection as conn:
