@@ -393,6 +393,61 @@ def run_read_query(query: str) -> list[dict]:
 
     finally:
         conn.close()
+@mcp.resource("Products://")
+def all_products_resource():
+    with get_connection as conn:
+        with conn.cursor() as cursor:
+            cursor.execute("""
+SELECT id,name,price
+FROM products
+ORDER BY id
+""")
+            products=cursor.fetchall()
+            return str(products)
+@mcp.resource("Products://{product_id}")
+def get_product_resource(product_id:int):
+    with get_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute("""
+SELECT id,name,price 
+FROM products
+where id=%s
+""",(product_id,))
+            product=cursor.fetchone()
+            if product is None:
+                return "Product is not found"
+            return str(product)
+@mcp.resource("customers://{customer_id}")
+def get_customer_resource(customer_id: int):
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("""
+                SELECT id, name, email
+                FROM customers
+                WHERE id = %s
+            """, (customer_id,))
+
+            customer = cur.fetchone()
+
+            if customer is None:
+                return "Customer not found"
+
+            return str(customer)
+@mcp.prompt()
+def analyze_customer_purchase(customer_id: int):
+    return f"""
+Analyze the purchase history of customer {customer_id}.
+
+Provide:
+1. Total number of orders
+2. Total amount spent
+3. Most purchased products
+4. Average order value
+5. A short summary of the customer's buying behavior
+
+Use only the provided customer/order data.
+"""
+
 if __name__ == "__main__":
     mcp.run(
         transport="http",
