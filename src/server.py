@@ -1,5 +1,11 @@
 from fastmcp import FastMCP
+import asyncio
+import sys
 from db import get_connection
+if sys.platform == "win32":
+    asyncio.set_event_loop_policy(
+        asyncio.WindowsSelectorEventLoopPolicy()
+    )
 mcp = FastMCP("Ecommerce Database MCP")
 @mcp.tool()
 def hello() -> str:
@@ -13,20 +19,18 @@ async def test_database()->str:
         conn=await get_connection()
         async with conn.cursor() as cursor:
             await cursor.execute("SELECT 1")
-            result=await cursor.fetchone()
-        return f"Database connection seccuseeful :{result}"
     except Exception as e:
-        return RuntimeError (f"Unable to fetch database :{e}")
+        raise RuntimeError (f"Unable to fetch database :{e}")
 
     finally:
         if conn:
-            conn.close()
+            await conn.close()
 @mcp.tool()
 async def get_products()->list:
     """Get allthe products from the ecommerece database"""
     conn=None
     try:
-        con=await get_connection()
+        conn=await get_connection()
         async with conn.cursor() as cursor:
             await cursor.execute("""
 SELECT id,name,category,price 
@@ -74,7 +78,7 @@ order by id;
 
             return users
     except Exception as e:
-        return (f"Unable to fetch users {e}")
+        raise RuntimeError(f"Unable to fetch users {e}")
  
     finally:
         if conn:
@@ -105,7 +109,7 @@ ORDER BY orders.id
                 })
             return orders
     except Exception as e:
-        return RuntimeError(f"Unable to fetch orders :{e}")
+        raise RuntimeError(f"Unable to fetch orders :{e}")
     finally:
         if conn:
             await conn.close()
@@ -145,7 +149,7 @@ ORDER BY orders.id;
             })
             return products
     except Exception as e:
-        return (f"Unable to the fetch the order details:{e}")
+        raise RuntimeError(f"Unable to the fetch the order details:{e}")
     finally:
         if conn:
             await conn.close()
@@ -179,7 +183,7 @@ ORDER BY total_revenue DESC;
                 })
             return revenue
     except Exception as e:
-        return (f"Unable to get the customer history{e}")
+        raise RuntimeError(f"Unable to get the customer history{e}")
         
     finally:
         if conn:
@@ -219,7 +223,7 @@ ORDER BY total_spent DESC
                 })
             return customer
     except Exception as e:
-        return (f"Unbale to get the top customers :{e}")
+        raise RuntimeError(f"Unbale to get the top customers :{e}")
 
     finally:
         if conn:
@@ -253,7 +257,7 @@ ORDER BY orders.id;
                 })
             return person
     except Exception as e:
-        return(f"uable to get the customers orders {e}")
+        raise RuntimeError(f"uable to get the customers orders {e}")
        
     finally:
         if conn:
@@ -291,7 +295,7 @@ async def search_products(search_term: str) -> list[dict]:
                 for row in rows
             ]
     except Exception as e:
-        return (f"Unable to get the serach products {e}")
+        raise RuntimeError(f"Unable to get the serach products {e}")
         
     finally:
         if conn:
@@ -329,7 +333,7 @@ async def get_customer_summary(user_id: int) -> dict:
                 GROUP BY users.id, users.name;
             """, (user_id,))
 
-            row = cur.fetchone()
+            row = await cur.fetchone()
 
             if row is None:
                 return {
@@ -344,6 +348,7 @@ async def get_customer_summary(user_id: int) -> dict:
                 "total_spent": float(row[4])
             }
     except Exception as e:
+        raise RuntimeError(f"Unable to get the customer :{e}")
         return (f"Uable to get the customer summary {e}")
     finally:
         if conn:
@@ -391,7 +396,7 @@ async def get_order_total(order_id: int) -> dict:
                 "total": float(row[2])
             }
     except Exception as e:
-        return (f"Unable to get the total order {e}")
+        raise RuntimeError(f"Unable to get the total order {e}")
  
 
     finally:
@@ -445,7 +450,7 @@ async def run_read_query(query: str) -> list[dict]:
                 for row in rows
             ]
     except Exception as e:
-        return RuntimeError (f"Unable to fetch customer :{e}")
+        raise RuntimeError (f"Unable to fetch customer :{e}")
        
     finally:
         if conn:

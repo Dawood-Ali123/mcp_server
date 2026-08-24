@@ -8,7 +8,7 @@ load_dotenv()
 
 
 async def get_connection():
-    return await AsyncConnection.connect(
+    return await psycopg.AsyncConnection.connect(
             host=os.getenv("DB_HOST"),
             port=os.getenv("DB_PORT"),
             dbname=os.getenv("DB_NAME"),
