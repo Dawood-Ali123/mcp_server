@@ -1,3 +1,4 @@
+
 import psycopg
 import os
 from dotenv import load_dotenv
@@ -11,5 +12,6 @@ def get_connection():
         port=os.getenv("DB_PORT"),
         dbname=os.getenv("DB_NAME"),
         user=os.getenv("DB_USER"),
-        password=os.getenv("DB_PASSWORD")
+        password=os.getenv("DB_PASSWORD"),
+        sslmode="require"
     )
