@@ -260,7 +260,7 @@ async def search_products(search_term: str) -> list[dict]:
     conn = None
 
     try:
-        await conn=get_connection()
+        conn=await get_connection()
         async with conn.cursor() as cur:
             await cur.execute("""
                 SELECT
@@ -460,7 +460,7 @@ ORDER BY id
 
 @mcp.resource("customers://{customer_id}")
 async def get_customer_resource(customer_id: int):
-    conn=get_connection()
+    conn=await get_connection()
     async with conn.cursor() as cur:
             await cur.execute("""
                 SELECT id, name, email
@@ -491,7 +491,7 @@ Use only the provided customer/order data.
 
 if __name__ == "__main__":
     mcp.run(
-        transport="http",
+        transport="https://ecommerce-database-mcp.fastmcp.app/mcp",
         host="0.0.0.0",
         port=8000
     )
