@@ -483,6 +483,91 @@ async def get_order_total(order_id: int) -> dict:
         if conn:
             await conn.close()
 @mcp.tool()
+async def get_database_analytics() -> dict:
+    """Get ecommerce database analytics."""
+
+    conn = None
+
+    try:
+        conn = await get_connection()
+
+        async with conn.cursor() as cur:
+
+            # Total Customers
+            await cur.execute("""
+                SELECT COUNT(*)
+                FROM users;
+            """)
+            total_customers = (await cur.fetchone())[0]
+
+            # Total Products
+            await cur.execute("""
+                SELECT COUNT(*)
+                FROM products;
+            """)
+            total_products = (await cur.fetchone())[0]
+
+            # Total Orders
+            await cur.execute("""
+                SELECT COUNT(*)
+                FROM orders;
+            """)
+            total_orders = (await cur.fetchone())[0]
+
+            # Total Sales
+            await cur.execute("""
+                SELECT COALESCE(
+                    SUM(order_items.quantity * products.price),
+                    0
+                )
+                FROM order_items
+                JOIN products
+                    ON order_items.product_id = products.id;
+            """)
+            total_sales = (await cur.fetchone())[0]
+
+            # Top Customers
+            await cur.execute("""
+                SELECT
+                    users.id,
+                    users.name,
+                    COUNT(orders.id) AS order_count
+                FROM users
+                LEFT JOIN orders
+                    ON users.id = orders.user_id
+                GROUP BY users.id, users.name
+                ORDER BY order_count DESC
+                LIMIT 5;
+            """)
+
+            rows = await cur.fetchall()
+
+            top_customers = []
+
+            for row in rows:
+                top_customers.append({
+                    "id": row[0],
+                    "name": row[1],
+                    "orders": row[2]
+                })
+
+            return {
+                "total_orders": total_orders,
+                "total_customers": total_customers,
+                "total_products": total_products,
+                "total_sales": float(total_sales),
+                "top_customers": top_customers
+            }
+
+    except Exception as e:
+        raise RuntimeError(
+            f"Unable to get database analytics: {e}"
+        )
+
+    finally:
+        if conn:
+            await conn.close()
+@mcp.tool()
 async def run_read_query(query: str) -> list[dict]:
     """Execute a read-only SQL query."""
 
