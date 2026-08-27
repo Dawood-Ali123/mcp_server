@@ -389,6 +389,51 @@ async def get_customer_summary(user_id: int) -> dict:
         if conn:
             await conn.close()
 @mcp.tool()
+async def get_table_info(table_name: str) -> list:
+    """Get column information for a database table."""
+
+    conn = None
+
+    try:
+        conn = await get_connection()
+
+        async with conn.cursor() as cur:
+
+            await cur.execute("""
+                SELECT
+                    column_name,
+                    data_type,
+                    is_nullable
+                FROM information_schema.columns
+                WHERE table_schema = 'public'
+                AND table_name = %s
+                ORDER BY ordinal_position;
+            """, (table_name,))
+
+            rows = await cur.fetchall()
+
+            columns = []
+
+            for row in rows:
+                columns.append({
+                    "column_name": row[0],
+                    "data_type": row[1],
+                    "is_nullable": row[2]
+                })
+
+            return columns
+
+    except Exception as e:
+
+        raise RuntimeError(
+            f"Unable to get table information: {e}"
+        )
+
+    finally:
+
+        if conn:
+            await conn.close()
+@mcp.tool()
 async def get_order_total(order_id: int) -> dict:
     """Get the total amount of a specific order."""
     if order_id<=0:
