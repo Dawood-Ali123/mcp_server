@@ -1,7 +1,7 @@
 from fastmcp import FastMCP
 import asyncio
 import sys
-from db import get_connection
+from  db import get_connection
 if sys.platform == "win32":
     asyncio.set_event_loop_policy(
         asyncio.WindowsSelectorEventLoopPolicy()
@@ -301,6 +301,40 @@ async def search_products(search_term: str) -> list[dict]:
     finally:
         if conn:
              await conn.close()
+@mcp.tool()
+async def get_database_tables() -> list:
+    """Get all tables from the database."""
+
+    conn = None
+
+    try:
+        conn = await get_connection()
+
+        async with conn.cursor() as cur:
+            await cur.execute("""
+                SELECT table_name
+                FROM information_schema.tables
+                WHERE table_schema = 'public'
+                ORDER BY table_name;
+            """)
+
+            rows = await cur.fetchall()
+
+            tables = []
+
+            for row in rows:
+                tables.append(row[0])
+
+            return tables
+
+    except Exception as e:
+        raise RuntimeError(
+            f"Unable to get database tables: {e}"
+        )
+
+    finally:
+        if conn:
+            await conn.close()
 @mcp.tool()
 async def get_customer_summary(user_id: int) -> dict:
     """Get a summary of a customer's orders and total spending."""
